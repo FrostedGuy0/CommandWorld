@@ -1,0 +1,170 @@
+# ============================================================
+#                     CommandWorld Config
+# ============================================================
+# Priority order (highest to lowest):
+#   1. Player's LuckPerms permission group  (groups section)
+#   2. World group                          (world-groups section)
+#   3. Individual world                     (worlds section)
+#   4. Global default                       (global section)
+#
+# mode: whitelist → ONLY listed commands are allowed/visible
+# mode: blacklist → listed commands are blocked/hidden
+#
+# By default ALL players (default LP group) see and can use
+# ZERO commands. Use:
+#   /cw global add execution <cmd>
+#   /cw world <name> add execution <cmd>
+#   /cw worldgroup <name> add execution <cmd>
+#   /cw group <lpGroup> add execution <cmd>
+# to open up commands per scope.
+# ============================================================
+
+# ── World Groups ─────────────────────────────────────────────
+# Worlds in the same group share chat and command rules unless
+# overridden at the individual world level.
+world-groups:
+  survival:
+    - world
+    - world_nether
+    - world_the_end
+  lobby:
+    - lobby
+  minigame:
+    - minigame1
+    - minigame2
+
+# ── Global Command Rules ──────────────────────────────────────
+# Lowest priority — applied only when no more-specific rule matches.
+# Set to whitelist + empty so that, if no LP-group / world-group /
+# world rule exists, players cannot use or see any commands.
+global:
+  commands:
+    mode: whitelist
+    execution: []
+    tab-complete: []
+
+# ── Per-World-Group Command Rules ─────────────────────────────
+# Add the commands you want available in each world group.
+# All lists are empty by default — add with /cw worldgroup <n> add ...
+world-group-commands:
+  survival:
+    mode: whitelist
+    execution: []
+    tab-complete: []
+
+  lobby:
+    mode: whitelist
+    execution: []
+    tab-complete: []
+
+  minigame:
+    mode: whitelist
+    execution: []
+    tab-complete: []
+
+# ── Per-World Command Rules ───────────────────────────────────
+# Overrides world-group rules for a specific world.
+# Add entries with: /cw world <worldName> add ...
+world-commands: {}
+
+# ── LuckPerms Group Command Rules ────────────────────────────
+# Highest priority. Group names must match LuckPerms exactly.
+#
+# 'default' is whitelist + empty → zero commands visible or usable.
+# 'admin' is blacklist + empty   → all commands allowed (no restrictions).
+# Add groups and commands as needed.
+groups:
+  admin:
+    mode: blacklist
+    execution: []
+    tab-complete: []
+
+  mod:
+    mode: blacklist
+    execution:
+      - /stop
+      - /op
+    tab-complete:
+      - /stop
+      - /op
+
+  default:
+    mode: whitelist
+    execution: []
+    tab-complete: []
+
+# ── Chat Settings ─────────────────────────────────────────────
+chat:
+  # Per-world chat: players only see messages from their world/group
+  enabled: true
+
+  # Format per world-group or world name.
+  # Placeholders: %player%, %message%, %world%, %prefix%, %suffix%
+  # MiniMessage colour codes are supported.
+  format:
+    survival: '<gray>[<green>Survival</green>] <white>%prefix%%player%%suffix%<dark_gray>: <white>%message%'
+    lobby:    '<gray>[<yellow>Lobby</yellow>] <white>%prefix%%player%%suffix%<dark_gray>: <white>%message%'
+    minigame: '<gray>[<aqua>Minigame</aqua>] <white>%prefix%%player%%suffix%<dark_gray>: <white>%message%'
+
+  # Cooldown in seconds per world-group or world (0 = disabled)
+  cooldown:
+    global: 0
+    survival: 2
+    lobby: 1
+    minigame: 0
+
+  cooldown-message: '<red>Please wait <yellow>%remaining%s</yellow> before chatting again.'
+
+  # Words blocked from chat (case-insensitive)
+  blocked-words: []
+  blocked-word-message: '<red>Your message contained a blocked word.'
+
+  # Send join/leave messages only to the same world/group
+  per-world-join-leave: true
+
+  join-format:
+    survival: '<green>+ %prefix%%player%</green>'
+    lobby:    '<green>+ %prefix%%player%</green>'
+
+  leave-format:
+    survival: '<red>- %prefix%%player%</red>'
+    lobby:    '<red>- %prefix%%player%</red>'
+
+  # Clear chat on world switch
+  clear-on-switch: false
+
+# ── Global Chat ───────────────────────────────────────────────
+global-chat:
+  enabled: true
+  # Prefix a message with this character to broadcast globally
+  prefix: '!'
+  format: '<dark_aqua>[<bold>Global</bold>] <white>%prefix%%player%%suffix%<dark_gray>: <white>%message%'
+  # Require permission commandworld.globalchat to use the ! prefix
+  require-permission: false
+
+# ── Staff Chat ────────────────────────────────────────────────
+staff-chat:
+  enabled: true
+  format: '<dark_red>[<bold>Staff</bold>] <gray>%player%<dark_gray>: <red>%message%'
+  # Sound played when a staff message is received (leave empty to disable)
+  sound: ''
+
+# ── Chat Spy ─────────────────────────────────────────────────
+chat-spy:
+  enabled: true
+  format: '<dark_gray>[<gray>Spy<dark_gray>][<aqua>%world%</aqua>] <gray>%player%<dark_gray>: <white>%message%'
+  include-staff-chat: false
+  include-global-chat: false
+  include-own-context: true
+  sound: ''
+
+# ── Messages ──────────────────────────────────────────────────
+messages:
+  no-permission:    '<red>You do not have permission to do that.'
+  command-blocked:  '<red>You cannot use that command here.'
+  reload-success:   '<green>CommandWorld configuration reloaded.'
+  staffchat-on:     '<green>Staff chat <bold>enabled</bold>. Your messages go to staff.'
+  staffchat-off:    '<gray>Staff chat <bold>disabled</bold>.'
+  chatspy-on:       '<green>Chat spy <bold>enabled</bold> — monitoring all worlds.'
+  chatspy-off:      '<gray>Chat spy <bold>disabled</bold>.'
+  chatspy-disabled: '<red>Chat spy is disabled on this server.'

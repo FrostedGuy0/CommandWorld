@@ -1,0 +1,12 @@
+dev\commandworld\listener\CommandListener.class
+dev\commandworld\config\CommandRule.class
+dev\commandworld\util\ChatHelper.class
+dev\commandworld\listener\ChatListener.class
+dev\commandworld\command\StaffChatCommand.class
+dev\commandworld\manager\PlayerStateManager.class
+dev\commandworld\command\CwCommand.class
+dev\commandworld\util\MiniMessageUtil.class
+dev\commandworld\command\ChatSpyCommand.class
+dev\commandworld\CommandWorldPlugin.class
+dev\commandworld\config\PluginConfig.class
+dev\commandworld\manager\LuckPermsManager.class

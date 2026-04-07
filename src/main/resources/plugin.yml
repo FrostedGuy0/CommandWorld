@@ -1,0 +1,52 @@
+name: CommandWorld
+version: '${project.version}'
+main: dev.commandworld.CommandWorldPlugin
+api-version: '1.21'
+description: World-based command control and chat system with staff tools
+authors: [CommandWorld]
+
+softdepend:
+  - LuckPerms
+  - Multiverse-Core
+
+commands:
+  cw:
+    description: CommandWorld main command — manage command rules per scope
+    usage: /cw <reload|global|world|worldgroup|group> [...]
+    aliases: [commandworld, cworld]
+  staffchat:
+    description: Toggle staff chat or send a staff message
+    usage: /staffchat [message]
+    aliases: [sc]
+  chatspy:
+    description: Toggle chat spy mode
+    usage: /chatspy
+
+permissions:
+  commandworld.admin:
+    description: Full administrative access — reload + manage all command rules
+    default: op
+
+  commandworld.reload:
+    description: Permission to reload the plugin (/cw reload)
+    default: op
+
+  commandworld.staff:
+    description: Marks a player as staff (receives staff-chat messages)
+    default: op
+
+  commandworld.staffchat:
+    description: Permission to use /staffchat
+    default: op
+
+  commandworld.chatspy:
+    description: Permission to use /chatspy
+    default: op
+
+  commandworld.bypass:
+    description: Bypass all command restrictions (never blocked, full tab-complete)
+    default: op
+
+  commandworld.globalchat:
+    description: Permission to use the global chat prefix (!)
+    default: true
