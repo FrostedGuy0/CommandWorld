@@ -29,7 +29,6 @@
     </repositories>
 
     <dependencies>
-        <!-- Paper API 1.21.x -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
@@ -37,7 +36,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- LuckPerms API -->
         <dependency>
             <groupId>net.luckperms</groupId>
             <artifactId>api</artifactId>
@@ -70,7 +68,6 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <!-- No shaded dependencies currently; slot kept for future additions -->
                         </configuration>
                     </execution>
                 </executions>
