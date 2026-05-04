@@ -6,29 +6,16 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.*;
 
-/**
- * Typed wrapper around config.yml.
- * Call {@link #load()} after every reload.
- */
 public class PluginConfig {
 
     private final CommandWorldPlugin plugin;
 
-    // ── World groups: groupName → list of world names ─────────────────────────
     private Map<String, List<String>> worldGroups = new HashMap<>();
 
-    // Reverse lookup: worldName → groupName
     private Map<String, String> worldToGroup = new HashMap<>();
 
-    // ── Command rules ─────────────────────────────────────────────────────────
-    // Key formats:
-    //   "global"
-    //   "group:<groupName>"   (world-group)
-    //   "world:<worldName>"
-    //   "lp:<lpGroup>"        (LuckPerms group)
     private Map<String, CommandRule> commandRules = new HashMap<>();
 
-    // ── Chat ──────────────────────────────────────────────────────────────────
     private boolean chatEnabled;
     private Map<String, String> chatFormats = new HashMap<>();
     private Map<String, Double> chatCooldowns = new HashMap<>();
@@ -41,18 +28,15 @@ public class PluginConfig {
     private Map<String, String> leaveFormats = new HashMap<>();
     private boolean clearOnSwitch;
 
-    // ── Global chat ───────────────────────────────────────────────────────────
     private boolean globalChatEnabled;
     private String globalChatPrefix;
     private String globalChatFormat;
     private boolean globalChatRequirePermission;
 
-    // ── Staff chat ────────────────────────────────────────────────────────────
     private boolean staffChatEnabled;
     private String staffChatFormat;
     private String staffChatSound;
 
-    // ── Chat spy ──────────────────────────────────────────────────────────────
     private boolean chatSpyEnabled;
     private String  chatSpyFormat;
     private boolean chatSpyIncludeStaff;
@@ -60,7 +44,6 @@ public class PluginConfig {
     private boolean chatSpyIncludeOwn;
     private String  chatSpySound;
 
-    // ── Messages ──────────────────────────────────────────────────────────────
     private Map<String, String> messages = new HashMap<>();
 
     public PluginConfig(CommandWorldPlugin plugin) {
@@ -70,7 +53,6 @@ public class PluginConfig {
     public void load() {
         FileConfiguration cfg = plugin.getConfig();
 
-        // ── World groups ──────────────────────────────────────────────────────
         worldGroups.clear();
         worldToGroup.clear();
         ConfigurationSection wgSec = cfg.getConfigurationSection("world-groups");
@@ -82,13 +64,10 @@ public class PluginConfig {
             }
         }
 
-        // ── Command rules ─────────────────────────────────────────────────────
         commandRules.clear();
 
-        // Global
         loadCommandRule(cfg, "global", "global");
 
-        // World-group rules
         ConfigurationSection wgCmd = cfg.getConfigurationSection("world-group-commands");
         if (wgCmd != null) {
             for (String g : wgCmd.getKeys(false)) {
@@ -96,7 +75,6 @@ public class PluginConfig {
             }
         }
 
-        // Per-world rules
         ConfigurationSection wcmd = cfg.getConfigurationSection("world-commands");
         if (wcmd != null) {
             for (String w : wcmd.getKeys(false)) {
@@ -104,7 +82,6 @@ public class PluginConfig {
             }
         }
 
-        // LuckPerms group rules
         ConfigurationSection lpGroups = cfg.getConfigurationSection("groups");
         if (lpGroups != null) {
             for (String g : lpGroups.getKeys(false)) {
@@ -112,7 +89,6 @@ public class PluginConfig {
             }
         }
 
-        // ── Chat ──────────────────────────────────────────────────────────────
         chatEnabled = cfg.getBoolean("chat.enabled", true);
 
         chatFormats.clear();
@@ -148,18 +124,15 @@ public class PluginConfig {
             for (String k : lfSec.getKeys(false)) leaveFormats.put(k, lfSec.getString(k, ""));
         }
 
-        // ── Global chat ───────────────────────────────────────────────────────
         globalChatEnabled           = cfg.getBoolean("global-chat.enabled", true);
         globalChatPrefix            = cfg.getString("global-chat.prefix", "!");
         globalChatFormat            = cfg.getString("global-chat.format", "<dark_aqua>[Global] <white>%player%: %message%");
         globalChatRequirePermission = cfg.getBoolean("global-chat.require-permission", false);
 
-        // ── Staff chat ────────────────────────────────────────────────────────
         staffChatEnabled = cfg.getBoolean("staff-chat.enabled", true);
         staffChatFormat  = cfg.getString("staff-chat.format", "<dark_red>[Staff] <gray>%player%: <red>%message%");
         staffChatSound   = cfg.getString("staff-chat.sound", "");
 
-        // ── Chat spy ──────────────────────────────────────────────────────────
         chatSpyEnabled        = cfg.getBoolean("chat-spy.enabled", true);
         chatSpyFormat         = cfg.getString("chat-spy.format", "<dark_gray>[<gray>Spy<dark_gray>][<aqua>%world%</aqua>] <gray>%player%<dark_gray>: <white>%message%");
         chatSpyIncludeStaff   = cfg.getBoolean("chat-spy.include-staff-chat", false);
@@ -167,15 +140,12 @@ public class PluginConfig {
         chatSpyIncludeOwn     = cfg.getBoolean("chat-spy.include-own-context", true);
         chatSpySound          = cfg.getString("chat-spy.sound", "");
 
-        // ── Messages ──────────────────────────────────────────────────────────
         messages.clear();
         ConfigurationSection msgSec = cfg.getConfigurationSection("messages");
         if (msgSec != null) {
             for (String k : msgSec.getKeys(false)) messages.put(k, msgSec.getString(k, ""));
         }
     }
-
-    // ── Internal helpers ──────────────────────────────────────────────────────
 
     private void loadCommandRule(FileConfiguration cfg, String path, String key) {
         String mode       = cfg.getString(path + ".mode", "blacklist");
@@ -192,35 +162,27 @@ public class PluginConfig {
         return out;
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
-    /** Returns the group name for a world, or null if not grouped. */
     public String getWorldGroup(String worldName) {
         return worldToGroup.get(worldName.toLowerCase());
     }
 
     public Map<String, List<String>> getWorldGroups() { return worldGroups; }
 
-    /**
-     * Resolve the effective CommandRule for a player given their LuckPerms
-     * primary group, the world they are in, and the world-group.
-     * Priority: lp-group > world-group > individual world > global
-     */
     public CommandRule resolveCommandRule(String lpGroup, String worldName, String worldGroup) {
-        // 1. LuckPerms group
+        
         if (lpGroup != null) {
             CommandRule r = commandRules.get("lp:" + lpGroup);
             if (r != null) return r;
         }
-        // 2. World group
+        
         if (worldGroup != null) {
             CommandRule r = commandRules.get("group:" + worldGroup);
             if (r != null) return r;
         }
-        // 3. Individual world
+        
         CommandRule r = commandRules.get("world:" + worldName.toLowerCase());
         if (r != null) return r;
-        // 4. Global
+        
         r = commandRules.get("global");
         return r != null ? r : CommandRule.ALLOW_ALL;
     }

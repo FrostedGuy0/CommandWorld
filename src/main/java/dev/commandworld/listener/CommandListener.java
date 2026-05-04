@@ -24,8 +24,6 @@ public class CommandListener implements Listener {
         this.plugin = plugin;
     }
 
-    // ── 1. Command-list packet filtering (PRIMARY tab-complete fix) ────────────
-
     @EventHandler(priority = EventPriority.HIGH)
     public void onCommandSend(PlayerCommandSendEvent event) {
         Player player = event.getPlayer();
@@ -38,18 +36,11 @@ public class CommandListener implements Listener {
             String entry = it.next();
             String label = stripNamespace(entry);
 
-            // Remove if:
-            // 1. The bare label is not allowed by the rule, OR
-            // 2. The entry is a namespaced duplicate (contains ":") — we never
-            //    want "crowneconomy:ah" showing even if "ah" is whitelisted.
-            //    Players should only see the clean command name.
             if (!rule.isVisible(label) || entry.contains(":")) {
                 it.remove();
             }
         }
     }
-
-    // ── 2. Async tab-complete (server-computed completions) ────────────────────
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onAsyncTabComplete(AsyncTabCompleteEvent event) {
@@ -63,15 +54,13 @@ public class CommandListener implements Listener {
         for (AsyncTabCompleteEvent.Completion c : event.completions()) {
             String s     = c.suggestion();
             String label = stripNamespace(s.startsWith("/") ? s.substring(1) : s);
-            // Same rule: allow only non-namespaced entries that pass the rule
+            
             if (rule.isVisible(label) && !s.contains(":")) filtered.add(c);
         }
 
         event.completions(filtered);
         event.setHandled(true);
     }
-
-    // ── 3. Execution blocking ──────────────────────────────────────────────────
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onCommand(PlayerCommandPreprocessEvent event) {
@@ -84,8 +73,6 @@ public class CommandListener implements Listener {
             MiniMessageUtil.send(player, plugin.getPluginConfig().getMessage("command-blocked"));
         }
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private String stripNamespace(String input) {
         String s = input.toLowerCase();

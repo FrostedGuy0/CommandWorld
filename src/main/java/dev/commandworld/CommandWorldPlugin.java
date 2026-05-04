@@ -57,36 +57,17 @@ public final class CommandWorldPlugin extends JavaPlugin implements Listener {
         getLogger().info("CommandWorld disabled.");
     }
 
-    /**
-     * On join, delay the command list refresh by 2 ticks.
-     *
-     * Reason: PlayerCommandSendEvent fires during the join sequence BEFORE
-     * LuckPerms has finished loading the player's group data from its async
-     * storage backend. This means getPrimaryGroup() returns null on the first
-     * fire, so the LP-group rule is skipped and the player might see more
-     * commands than they should.
-     *
-     * Waiting 2 ticks (100ms) gives LuckPerms enough time to cache the user,
-     * then we re-fire PlayerCommandSendEvent via updateCommands() with the
-     * correct group resolved.
-     */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         getServer().getScheduler().runTaskLater(this, player::updateCommands, 2L);
     }
 
-    /**
-     * When a player changes worlds, their allowed command list may differ.
-     * Re-send the command list packet so the client updates immediately.
-     */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onWorldChange(PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
         getServer().getScheduler().runTask(this, player::updateCommands);
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void registerCommand(String name, org.bukkit.command.CommandExecutor executor) {
         PluginCommand cmd = getCommand(name);
@@ -103,14 +84,12 @@ public final class CommandWorldPlugin extends JavaPlugin implements Listener {
     public void reload() {
         reloadConfig();
         pluginConfig.load();
-        // Refresh the command list for all online players so changes apply instantly
+        
         for (Player player : getServer().getOnlinePlayers()) {
             player.updateCommands();
         }
         getLogger().info("CommandWorld configuration reloaded.");
     }
-
-    // ── Accessors ─────────────────────────────────────────────────────────────
 
     public static CommandWorldPlugin getInstance() { return instance; }
     public PluginConfig getPluginConfig()          { return pluginConfig; }

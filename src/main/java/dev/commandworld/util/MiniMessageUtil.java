@@ -5,9 +5,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 
-/**
- * Convenience helpers for MiniMessage formatting.
- */
 public final class MiniMessageUtil {
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
@@ -22,9 +19,6 @@ public final class MiniMessageUtil {
         player.sendMessage(parse(miniMessage));
     }
 
-    /**
-     * Applies common chat placeholders.
-     */
     public static String applyPlaceholders(String format, String player, String message,
                                            String world, String prefix, String suffix) {
         return format
@@ -35,9 +29,6 @@ public final class MiniMessageUtil {
                 .replace("%suffix%",  suffix  == null ? "" : suffix);
     }
 
-    /**
-     * Strips MiniMessage tags from a string (for plain-text comparison etc.).
-     */
     public static String stripTags(String miniMessage) {
         return MM.stripTags(miniMessage);
     }

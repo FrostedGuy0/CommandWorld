@@ -5,19 +5,11 @@ import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Tracks per-player in-session toggles.
- * All state is ephemeral — cleared on quit.
- *
- * ChatSpy is toggle-only. No auto-enable, no bypass lock.
- */
 public class PlayerStateManager {
 
     private final Set<UUID> staffChatActive = ConcurrentHashMap.newKeySet();
     private final Set<UUID> chatSpyActive   = ConcurrentHashMap.newKeySet();
     private final Map<UUID, Long> chatCooldowns = new ConcurrentHashMap<>();
-
-    // ── Staff chat ────────────────────────────────────────────────────────────
 
     public boolean toggleStaffChat(Player player) {
         UUID id = player.getUniqueId();
@@ -34,9 +26,6 @@ public class PlayerStateManager {
         return staffChatActive.contains(player.getUniqueId());
     }
 
-    // ── Chat spy (toggle-only) ────────────────────────────────────────────────
-
-    /** Toggles chat spy. Returns true if now active, false if now inactive. */
     public boolean toggleChatSpy(Player player) {
         UUID id = player.getUniqueId();
         if (chatSpyActive.remove(id)) return false;
@@ -52,8 +41,6 @@ public class PlayerStateManager {
         return Collections.unmodifiableSet(chatSpyActive);
     }
 
-    // ── Cooldowns ─────────────────────────────────────────────────────────────
-
     public double getRemainingCooldown(Player player) {
         Long expiry = chatCooldowns.get(player.getUniqueId());
         if (expiry == null) return 0;
@@ -66,8 +53,6 @@ public class PlayerStateManager {
         chatCooldowns.put(player.getUniqueId(),
                 System.currentTimeMillis() + (long)(seconds * 1000));
     }
-
-    // ── Cleanup ───────────────────────────────────────────────────────────────
 
     public void remove(Player player) {
         UUID id = player.getUniqueId();

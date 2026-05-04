@@ -8,9 +8,6 @@ import org.bukkit.entity.Player;
 
 import java.util.logging.Level;
 
-/**
- * Thin bridge to LuckPerms. Gracefully no-ops when LP is absent.
- */
 public class LuckPermsManager {
 
     private final CommandWorldPlugin plugin;
@@ -37,9 +34,6 @@ public class LuckPermsManager {
         return luckPerms != null;
     }
 
-    /**
-     * Returns the primary group of a player, or {@code null} if LP is unavailable.
-     */
     public String getPrimaryGroup(Player player) {
         if (!isAvailable()) return null;
         User user = luckPerms.getUserManager().getUser(player.getUniqueId());

@@ -15,24 +15,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * /cw <subcommand> [args]
- *
- * Subcommands:
- *   reload
- *
- *   global add|remove|list execution|tab-complete <command>
- *
- *   world <worldName> add|remove|list execution|tab-complete <command>
- *
- *   worldgroup <groupName> add|remove|list execution|tab-complete <command>
- *
- *   group <lpGroup> add|remove|list execution|tab-complete <command>
- *
- *   mode global|world <name>|worldgroup <name>|group <name>  whitelist|blacklist
- *
- * All changes are written to config.yml immediately and the config is reloaded.
- */
 public class CwCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> SCOPES      = List.of("global", "world", "worldgroup", "group");
@@ -46,8 +28,6 @@ public class CwCommand implements CommandExecutor, TabCompleter {
     public CwCommand(CommandWorldPlugin plugin) {
         this.plugin = plugin;
     }
-
-    // ── Execution ─────────────────────────────────────────────────────────────
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd,
@@ -70,27 +50,23 @@ public class CwCommand implements CommandExecutor, TabCompleter {
                 send(sender, plugin.getPluginConfig().getMessage("reload-success"));
             }
 
-            // /cw global add|remove|list execution|tab-complete [cmd]
             case "global" -> {
                 if (args.length < 2) { sendHelp(sender, label); return true; }
                 handleScopedAction(sender, "global", null, Arrays.copyOfRange(args, 1, args.length));
             }
 
-            // /cw world <worldName> add|remove|list execution|tab-complete [cmd]
             case "world" -> {
                 if (args.length < 3) { sendHelp(sender, label); return true; }
                 String worldName = args[1];
                 handleScopedAction(sender, "world", worldName, Arrays.copyOfRange(args, 2, args.length));
             }
 
-            // /cw worldgroup <groupName> add|remove|list execution|tab-complete [cmd]
             case "worldgroup" -> {
                 if (args.length < 3) { sendHelp(sender, label); return true; }
                 String groupName = args[1];
                 handleScopedAction(sender, "worldgroup", groupName, Arrays.copyOfRange(args, 2, args.length));
             }
 
-            // /cw group <lpGroup> add|remove|list execution|tab-complete [cmd]
             case "group" -> {
                 if (args.length < 3) { sendHelp(sender, label); return true; }
                 String lpGroup = args[1];
@@ -102,13 +78,6 @@ public class CwCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    /**
-     * Handles add / remove / list / mode for a given scope.
-     *
-     * @param scope    "global", "world", "worldgroup", "lp"
-     * @param name     world/group name, or null for global
-     * @param rest     remaining args after the scope identifier
-     */
     private void handleScopedAction(CommandSender sender, String scope, String name, String[] rest) {
         if (rest.length == 0) {
             sendScopeHelp(sender, scope, name);
@@ -141,9 +110,6 @@ public class CwCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    // ── Config path resolution ────────────────────────────────────────────────
-
-    /** Returns the YAML path prefix for a scope + name, e.g. "world-commands.world_nether" */
     private String configPath(String scope, String name) {
         return switch (scope) {
             case "global"      -> "global.commands";
@@ -153,8 +119,6 @@ public class CwCommand implements CommandExecutor, TabCompleter {
             default            -> "global.commands";
         };
     }
-
-    // ── Actions ───────────────────────────────────────────────────────────────
 
     private void doList(CommandSender sender, String scope, String name) {
         FileConfiguration cfg = plugin.getConfig();
@@ -182,7 +146,7 @@ public class CwCommand implements CommandExecutor, TabCompleter {
         }
         String path = configPath(scope, name);
         plugin.getConfig().set(path + ".mode", mode);
-        // Ensure the lists exist so the section isn't empty
+        
         if (!plugin.getConfig().contains(path + ".execution"))
             plugin.getConfig().set(path + ".execution", new ArrayList<>());
         if (!plugin.getConfig().contains(path + ".tab-complete"))
@@ -193,13 +157,13 @@ public class CwCommand implements CommandExecutor, TabCompleter {
 
     private void doAdd(CommandSender sender, String scope, String name, String type, String command) {
         String path = configPath(scope, name);
-        // Ensure section exists
+        
         ensureSectionExists(path);
 
         String listPath = path + "." + type;
         List<String> list = new ArrayList<>(plugin.getConfig().getStringList(listPath));
 
-        String entry = "/" + command; // store with leading slash for readability (normalised on load)
+        String entry = "/" + command; 
         if (list.contains(entry) || list.contains(command)) {
             send(sender, "<yellow>'" + command + "' is already in " + type + " list for <aqua>" + scopeLabel(scope, name) + "</aqua>.");
             return;
@@ -224,8 +188,6 @@ public class CwCommand implements CommandExecutor, TabCompleter {
         saveAndReload();
         send(sender, "<green>Removed <white>/" + command + "</white> from " + type + " list for <aqua>" + scopeLabel(scope, name) + "</aqua>.");
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void ensureSectionExists(String path) {
         FileConfiguration cfg = plugin.getConfig();
@@ -280,8 +242,6 @@ public class CwCommand implements CommandExecutor, TabCompleter {
         send(sender, "  <yellow>remove <execution|tab-complete> <command>");
     }
 
-    // ── Tab-complete ──────────────────────────────────────────────────────────
-
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command cmd,
                                       @NotNull String label, @NotNull String[] args) {
@@ -294,7 +254,6 @@ public class CwCommand implements CommandExecutor, TabCompleter {
         return switch (args[0].toLowerCase()) {
             case "reload" -> List.of();
 
-            // /cw global <action>
             case "global" -> {
                 if (args.length == 2) yield filter(ACTIONS, args[1]);
                 if (args.length == 3 && args[1].equalsIgnoreCase("mode")) yield filter(MODES, args[2]);
@@ -302,7 +261,6 @@ public class CwCommand implements CommandExecutor, TabCompleter {
                 yield List.of();
             }
 
-            // /cw world <name> <action> ...
             case "world" -> {
                 if (args.length == 2) yield filter(worldNames(), args[1]);
                 if (args.length == 3) yield filter(ACTIONS, args[2]);
@@ -311,7 +269,6 @@ public class CwCommand implements CommandExecutor, TabCompleter {
                 yield List.of();
             }
 
-            // /cw worldgroup <name> <action> ...
             case "worldgroup" -> {
                 if (args.length == 2) yield filter(new ArrayList<>(cfg.getWorldGroups().keySet()), args[1]);
                 if (args.length == 3) yield filter(ACTIONS, args[2]);
@@ -320,9 +277,8 @@ public class CwCommand implements CommandExecutor, TabCompleter {
                 yield List.of();
             }
 
-            // /cw group <lpGroup> <action> ...
             case "group" -> {
-                if (args.length == 2) yield List.of(); // LP groups not enumerable without LP API here
+                if (args.length == 2) yield List.of(); 
                 if (args.length == 3) yield filter(ACTIONS, args[2]);
                 if (args.length == 4 && args[2].equalsIgnoreCase("mode")) yield filter(MODES, args[3]);
                 if (args.length == 4 && isAddRemove(args[2])) yield filter(TYPES, args[3]);

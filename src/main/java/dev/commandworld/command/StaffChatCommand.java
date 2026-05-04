@@ -16,13 +16,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-/**
- * /staffchat [message]
- * <ul>
- *   <li>No args → toggle staff-chat mode</li>
- *   <li>With args → send a one-off staff message without toggling</li>
- * </ul>
- */
 public class StaffChatCommand implements CommandExecutor, TabCompleter {
 
     private final CommandWorldPlugin plugin;
@@ -48,13 +41,12 @@ public class StaffChatCommand implements CommandExecutor, TabCompleter {
         PlayerStateManager states = plugin.getPlayerStateManager();
 
         if (args.length == 0) {
-            // Toggle mode
+            
             boolean active = states.toggleStaffChat(player);
             MiniMessageUtil.send(player, cfg.getMessage(active ? "staffchat-on" : "staffchat-off"));
             return true;
         }
 
-        // One-shot: send message without toggling
         String message   = String.join(" ", args);
         String formatted = MiniMessageUtil.applyPlaceholders(cfg.getStaffChatFormat(),
                 player.getName(), message, player.getWorld().getName(),
@@ -73,6 +65,6 @@ public class StaffChatCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command cmd,
                                       @NotNull String label, @NotNull String[] args) {
-        return List.of(); // No completions for chat messages
+        return List.of(); 
     }
 }

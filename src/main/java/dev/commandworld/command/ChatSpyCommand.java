@@ -13,10 +13,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-/**
- * /chatspy — toggle global chat monitoring for staff.
- * Toggle-only. No auto-enable, no bypass lock.
- */
 public class ChatSpyCommand implements CommandExecutor, TabCompleter {
 
     private final CommandWorldPlugin plugin;

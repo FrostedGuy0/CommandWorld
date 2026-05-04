@@ -18,18 +18,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.UUID;
 
-/**
- * Central chat router for CommandWorld.
- *
- * Message routing priority (first match wins):
- *   1. Blocked-word filter
- *   2. Global chat (! prefix) — checked BEFORE staff chat so !hello always works
- *   3. Staff chat (toggled via /staffchat)
- *   4. Per-world / world-group chat
- *
- * ChatSpy is layered on top of world chat only.
- * ChatSpy is toggle-only — no auto-enable on join.
- */
 @SuppressWarnings("deprecation")
 public class ChatListener implements Listener {
 
@@ -39,14 +27,10 @@ public class ChatListener implements Listener {
         this.plugin = plugin;
     }
 
-    // ── Join / quit ──────────────────────────────────────────────────────────
-
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         PluginConfig cfg = plugin.getPluginConfig();
-
-        // ChatSpy is toggle-only — never auto-enabled on join
 
         if (!cfg.isPerWorldJoinLeave()) return;
 
@@ -81,8 +65,6 @@ public class ChatListener implements Listener {
         broadcastToContext(MiniMessageUtil.parse(formatted), context);
     }
 
-    // ── Main chat handler ────────────────────────────────────────────────────
-
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent event) {
         event.setCancelled(true);
@@ -92,7 +74,6 @@ public class ChatListener implements Listener {
         PluginConfig cfg = plugin.getPluginConfig();
         PlayerStateManager states = plugin.getPlayerStateManager();
 
-        // 1. Blocked words — always checked first regardless of mode
         for (String word : cfg.getBlockedWords()) {
             if (message.toLowerCase().contains(word.toLowerCase())) {
                 MiniMessageUtil.send(player, cfg.getBlockedWordMessage());
@@ -100,8 +81,6 @@ public class ChatListener implements Listener {
             }
         }
 
-        // 2. Global chat prefix — checked BEFORE staff chat so !hello always
-        //    broadcasts globally even when staffchat mode is active
         if (cfg.isGlobalChatEnabled()) {
             String gPrefix = cfg.getGlobalChatPrefix();
             if (!gPrefix.isEmpty() && message.startsWith(gPrefix)) {
@@ -117,7 +96,6 @@ public class ChatListener implements Listener {
             }
         }
 
-        // 3. Staff chat — only reached if message didn't start with global prefix
         if (cfg.isStaffChatEnabled() && states.isStaffChatActive(player)) {
             if (!player.hasPermission("commandworld.staffchat")) {
                 states.disableStaffChat(player);
@@ -127,7 +105,6 @@ public class ChatListener implements Listener {
             }
         }
 
-        // 4. World / group chat
         if (!cfg.isChatEnabled()) {
             broadcastToAll(player, message);
             return;
@@ -142,8 +119,6 @@ public class ChatListener implements Listener {
 
         sendWorldChat(player, message);
     }
-
-    // ── Routing ──────────────────────────────────────────────────────────────
 
     private void sendWorldChat(Player player, String message) {
         PluginConfig cfg = plugin.getPluginConfig();
@@ -160,8 +135,6 @@ public class ChatListener implements Listener {
 
         states.setCooldown(player, cfg.getChatCooldown(context));
 
-        // Collect UUIDs of active spies so we can exclude them from normal
-        // delivery and send them the spy-formatted version instead
         java.util.Set<UUID> spyIds = new java.util.HashSet<>(states.getChatSpyPlayers());
 
         for (Player recipient : Bukkit.getOnlinePlayers()) {
@@ -169,14 +142,12 @@ public class ChatListener implements Listener {
             boolean sameContext = ChatHelper.getEffectiveContext(plugin, recipient).equals(context);
 
             if (sameContext) {
-                // Always deliver normal message to same-context players,
-                // even if they're a spy — they're part of this chat
+                
                 recipient.sendMessage(msg);
             }
-            // Spies in other contexts get the spy-formatted copy below
+            
         }
 
-        // ChatSpy: send spy-formatted copy to spies NOT in this context
         dispatchToSpies(player, world, context, message, prefix, suffix);
 
         plugin.getLogger().info(String.format("[%s] %s: %s", context, player.getName(), message));
@@ -192,7 +163,6 @@ public class ChatListener implements Listener {
                 cfg.getGlobalChatFormat(), player.getName(), message, context, prefix, suffix);
         Component msg = MiniMessageUtil.parse(formatted);
 
-        // Send to all players — global chat is for everyone, no spy duplication
         Bukkit.getOnlinePlayers().forEach(p -> p.sendMessage(msg));
 
         plugin.getLogger().info(String.format("[Global] %s: %s", player.getName(), message));
@@ -218,11 +188,6 @@ public class ChatListener implements Listener {
         plugin.getLogger().info(String.format("[StaffChat] %s: %s", player.getName(), message));
     }
 
-    // ── ChatSpy ───────────────────────────────────────────────────────────────
-    // Only called for world/group chat. Sends spy-formatted copy to active
-    // spies who are NOT already in the same context as the sender
-    // (those players already got the normal message above).
-
     private void dispatchToSpies(Player sender, String world, String context,
                                   String message, String prefix, String suffix) {
         PluginConfig cfg = plugin.getPluginConfig();
@@ -242,17 +207,15 @@ public class ChatListener implements Listener {
         for (UUID spyId : states.getChatSpyPlayers()) {
             Player spy = Bukkit.getPlayer(spyId);
             if (spy == null || !spy.isOnline()) continue;
-            // Don't send back to sender
+            
             if (spy.getUniqueId().equals(sender.getUniqueId())) continue;
-            // Skip spies already in the same context — they got the normal message
+            
             if (ChatHelper.getEffectiveContext(plugin, spy).equals(context)) continue;
 
             spy.sendMessage(spyMsg);
             playSpySound(spy, cfg);
         }
     }
-
-    // ── Sound helpers ─────────────────────────────────────────────────────────
 
     private void playSpySound(Player spy, PluginConfig cfg) {
         String soundName = cfg.getChatSpySound();
@@ -277,8 +240,6 @@ public class ChatListener implements Listener {
             });
         } catch (IllegalArgumentException ignored) {}
     }
-
-    // ── Broadcast helpers ─────────────────────────────────────────────────────
 
     private void broadcastToAll(Player sender, String message) {
         Component msg = MiniMessageUtil.parse("<gray>" + sender.getName() + ": " + message);
